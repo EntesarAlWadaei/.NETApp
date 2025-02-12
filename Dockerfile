@@ -1,4 +1,4 @@
-# Use the official .NET SDK image as the build environment
+# Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 # Set the working directory in the container
@@ -8,23 +8,21 @@ WORKDIR /app
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy the rest of the application
+# Copy the rest of the application and build it
 COPY . ./
+RUN dotnet publish -c Release -o /app/out
 
-# Build the application
-RUN dotnet publish -c Release -o out
+# Use Nginx image as the base image to serve the app
+FROM nginx:alpine AS runtime
 
-# Use the official .NET runtime image to run the application
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+# Copy the build output from the previous stage to the Nginx server directory
+COPY --from=build /app/out /usr/share/nginx/html
 
-# Set the working directory
-WORKDIR /app
+# Copy the Nginx configuration file (you can customize it as needed)
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy the build output from the previous build stage
-COPY --from=build /app/out .
-
-# Expose the port the app will run on
+# Expose the port that Nginx will serve the app on
 EXPOSE 80
 
-# Define the entry point to run the application
-ENTRYPOINT ["dotnet", "SimpleDockerApp.dll"]
+# Run Nginx as the default process
+CMD ["nginx", "-g", "daemon off;"]
