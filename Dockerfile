@@ -18,7 +18,7 @@ FROM nginx:alpine AS runtime
 # Copy the build output from the previous stage to the Nginx server directory
 COPY --from=build /app/out /usr/share/nginx/html
 
-# Copy the Nginx configuration file (you can customize it as needed)
+# Copy the Nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose the port that Nginx will serve the app on
